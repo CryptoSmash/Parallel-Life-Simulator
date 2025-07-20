@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parallel Life Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .phone-container {
+            max-width: 375px;
+            margin: 20px auto;
+            background: #000;
+            border-radius: 25px;
+            padding: 10px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .app-container {
+            background: #f8f9fa;
+            border-radius: 20px;
+            min-height: 750px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .status-bar {
+            background: #000;
+            color: #fff;
+            padding: 8px 20px;
+            display: flex;
+            justify-content: between;
+            font-size: 14px;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .premium-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #ffd700;
+            color: #333;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .main-content {
+            padding: 20px;
+            flex: 1;
+        }
+
+        .decision-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .decision-card.premium {
+            border-color: #ffd700;
+            position: relative;
+        }
+
+        .decision-card.locked {
+            background: #f5f5f5;
+            opacity: 0.7;
+        }
+
+        .decision-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .decision-desc {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .paths-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .path {
+            flex: 1;
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .path:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .path.selected {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: #fff;
+        }
+
+        .path-title {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .path-outcome {
+            font-size: 10px;
+            opacity: 0.8;
+        }
+
+        .lock-icon {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ffd700;
+            color: #333;
+            padding: 4px;
+            border-radius: 50%;
+            font-size: 12px;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .simulate-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .simulate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .simulate-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .results-panel {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .results-panel.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .parallel-life {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .life-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .life-details {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .premium-unlock {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #333;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            margin: 15px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .premium-unlock:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-size: 12px;
+        }
+
+        .nav-bottom {
+            background: #fff;
+            padding: 15px;
+            display: flex;
+            justify-content: space-around;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .nav-item {
+            text-align: center;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item:hover {
+            background: #f8f9fa;
+        }
+
+        .nav-item.active {
+            color: #667eea;
+            background: #e3f2fd;
+        }
+
+        .monetization-popup {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .popup-content {
+            background: #fff;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px;
+            text-align: center;
+            max-width: 300px;
+        }
+
+        .popup-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .price-tag {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .popup-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            margin: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .popup-btn:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+
+        .popup-btn.secondary {
+            background: #ccc;
+            color: #333;
+        }
+
+        .free-uses {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-container">
+        <div class="app-container">
+            <div class="status-bar">
+                <span>9:41</span>
+                <span>●●●●● 5G</span>
+            </div>
+            
+            <div class="header">
+                <div class="premium-badge" id="premiumBadge" style="display: none;">PREMIUM</div>
+                <h1>Parallel Lives</h1>
+                <p>Discover the paths you didn't take</p>
+                <div class="free-uses" id="freeUses">2 free simulations left</div>
+            </div>
+
+            <div class="main-content">
+                <div class="stats-bar">
+                    <div>Paths Explored: <strong id="pathsExplored">0</strong></div>
+                    <div>Decisions Made: <strong id="decisionsMade">0</strong></div>
+                </div>
+
+                <div class="decision-card">
+                    <div class="decision-title">College Major Choice</div>
+                    <div class="decision-desc">What if you had chosen differently in college?</div>
+                    <div class="paths-container">
+                        <div class="path" onclick="selectPath(this, 'engineering')">
+                            <div class="path-title">Engineering</div>
+                            <div class="path-outcome">Tech career, $85K avg</div>
+                        </div>
+                        <div class="path" onclick="selectPath(this, 'arts')">
+                            <div class="path-title">Fine Arts</div>
+                            <div class="path-outcome">Creative path, variable income</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="decision-card premium">
+                    <div class="lock-icon">🔒</div>
+                    <div class="decision-title">Career Pivot at 30</div>
+                    <div class="decision-desc">What if you had changed careers in your thirties?</div>
+                    <div class="paths-container">
+                        <div class="path locked" onclick="handleLockedPath(this, 'entrepreneur', 'premium')">
+                            <div class="path-title">Entrepreneur</div>
+                            <div class="path-outcome">Start your own business</div>
+                        </div>
+                        <div class="path locked" onclick="handleLockedPath(this, 'corporate', 'premium')">
+                            <div class="path-title">Stay Corporate</div>
+                            <div class="path-outcome">Climb the ladder</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="decision-card locked">
+                    <div class="lock-icon">🔒</div>
+                    <div class="decision-title">Geographic Move</div>
+                    <div class="decision-desc">What if you had moved to a different city or country?</div>
+                    <div class="paths-container">
+                        <div class="path locked" onclick="handleLockedPath(this, 'bigcity', 'unlock')">
+                            <div class="path-title">Big City</div>
+                            <div class="path-outcome">NYC/LA lifestyle</div>
+                        </div>
+                        <div class="path locked" onclick="handleLockedPath(this, 'smalltown', 'unlock')">
+                            <div class="path-title">Small Town</div>
+                            <div class="path-outcome">Rural/suburban life</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="decision-card" id="aiDecisionCard" style="display: none; border: 2px solid #4CAF50;">
+                    <div style="background: linear-gradient(135deg, #4CAF50, #45a049); color: white; padding: 8px 12px; border-radius: 8px; margin-bottom: 10px; font-size: 12px; text-align: center;">
+                        🤖 AI-Generated Decision
+                    </div>
+                    <div class="decision-title" id="aiDecisionTitle">Loading personalized scenario...</div>
+                    <div class="decision-desc" id="aiDecisionDesc">Our AI is analyzing your profile to create a custom life scenario.</div>
+                    <div class="paths-container" id="aiDecisionPaths">
+                        <div class="path" style="background: linear-gradient(135deg, #e8f5e8, #c8e6c9);">
+                            <div class="path-title">Generating...</div>
+                            <div class="path-outcome">AI is creating options</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="premium-unlock" onclick="generateAIContent()" id="aiGenerateBtn">
+                    <strong>🤖 Generate AI Decision</strong><br>
+                    Get a personalized scenario based on your profile
+                </div>
+
+                <button class="simulate-btn" id="simulateBtn" onclick="simulateLife()" disabled>
+                    Select a Path to Simulate
+                </button>
+
+                <div class="decision-card" style="background: linear-gradient(135deg, #f3e5f5, #e1bee7); border: 2px solid #9c27b0;">
+                    <div style="background: linear-gradient(135deg, #9c27b0, #7b1fa2); color: white; padding: 8px 12px; border-radius: 8px; margin-bottom: 10px; font-size: 12px; text-align: center;">
+                        ✨ Quick Profile Setup
+                    </div>
+                    <div class="decision-title">Help AI Personalize Your Experience</div>
+                    <div class="decision-desc">Quick 30-second setup for better AI-generated scenarios</div>
+                    <div style="display: flex; gap: 8px; margin-top: 10px;">
+                        <input type="number" placeholder="Age" id="userAge" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                        <select id="userCareer" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                            <option value="">Career</option>
+                            <option value="marketing">Marketing</option>
+                            <option value="engineering">Engineering</option>
+                            <option value="finance">Finance</option>
+                            <option value="healthcare">Healthcare</option>
+                            <option value="education">Education</option>
+                            <option value="sales">Sales</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div style="margin-top: 8px;">
+                        <input type="text" placeholder="Location (city, country)" id="userLocation" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                    </div>
+                    <button onclick="saveUserProfile()" style="width: 100%; background: linear-gradient(135deg, #9c27b0, #7b1fa2); color: white; border: none; padding: 10px; border-radius: 8px; margin-top: 10px; cursor: pointer; font-size: 14px;">
+                        Save Profile & Enable AI
+                    </button>
+                </div>
+
+                <div class="results-panel" id="resultsPanel">
+                    <h3>Your Parallel Life Simulation</h3>
+                    <div id="simulationResults"></div>
+                </div>
+            </div>
+
+            <div class="nav-bottom">
+                <div class="nav-item active">
+                    <div>🏠</div>
+                    <div style="font-size: 10px;">Home</div>
+                </div>
+                <div class="nav-item" onclick="showMonetizationPopup('insights')">
+                    <div>📊</div>
+                    <div style="font-size: 10px;">Insights</div>
+                </div>
+                <div class="nav-item" onclick="showMonetizationPopup('social')">
+                    <div>👥</div>
+                    <div style="font-size: 10px;">Social</div>
+                </div>
+                <div class="nav-item">
+                    <div>⚙️</div>
+                    <div style="font-size: 10px;">Settings</div>
+                </div>
+            </div>
+
+            <div class="monetization-popup" id="monetizationPopup">
+                <div class="popup-content">
+                    <div class="popup-title" id="popupTitle">Unlock Premium Features</div>
+                    <div id="popupContent">
+                        <div class="price-tag" id="priceTag">$4.99/month</div>
+                        <p id="popupDescription">Get unlimited simulations and detailed life insights</p>
+                        <button class="popup-btn" onclick="handlePurchase()">Subscribe Now</button>
+                        <button class="popup-btn secondary" onclick="closePopup()">Maybe Later</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let aiGeneratedDecisions = [];
+        let userProfile = {
+            age: null,
+            career: null,
+            location: null,
+            interests: [],
+            completedOnboarding: false
+        };
+
+        // Simulated AI responses (in production, these would come from OpenAI/Gemini)
+        const aiDecisionTemplates = {
+            career: {
+                title: "Early Career Pivot",
+                description: "What if you had switched to tech earlier in your career?",
+                paths: [
+                    { title: "Software Engineer", outcome: "High salary, remote work options" },
+                    { title: "Product Manager", outcome: "Strategy role, leadership path" }
+                ]
+            },
+            relationship: {
+                title: "Long Distance Relationship",
+                description: "What if you had stayed with your college relationship despite the distance?",
+                paths: [
+                    { title: "Stayed Together", outcome: "Married, settled in their city" },
+                    { title: "Broke Up", outcome: "Explored other relationships, stayed mobile" }
+                ]
+            },
+            education: {
+                title: "Graduate School Decision", 
+                description: "What if you had pursued that MBA you considered?",
+                paths: [
+                    { title: "Got MBA", outcome: "Higher earning potential, more debt" },
+                    { title: "Work Experience", outcome: "Practical skills, faster career growth" }
+                ]
+            }
+        };
+
+        async function generateAIDecision(userContext) {
+            // Simulate API call delay
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // In production, this would be an actual API call:
+            /*
+            const response = await fetch('/api/generate-decision', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userProfile: userContext,
+                    apiKey: 'your-openai-key',
+                    prompt: `Generate a life decision scenario for a ${userContext.age} year old ${userContext.career} in ${userContext.location}...`
+                })
+            });
+            */
+            
+            // Simulated AI response
+            const decisionTypes = Object.keys(aiDecisionTemplates);
+            const randomType = decisionTypes[Math.floor(Math.random() * decisionTypes.length)];
+            return aiDecisionTemplates[randomType];
+        }
+
+        async function generatePersonalizedOutcome(pathChoice, userProfile) {
+            // Simulate AI generating personalized outcome
+            await new Promise(resolve => setTimeout(resolve, 800));
+            
+            const personalizedOutcomes = {
+                "Software Engineer": `Based on your ${userProfile.career} background, you transitioned smoothly into tech. Your analytical skills from ${userProfile.career} gave you an edge in problem-solving. You now earn ${85 + Math.floor(Math.random() * 30)}K and work remotely from ${userProfile.location}.`,
+                "Product Manager": `Your experience in ${userProfile.career} made you a strong PM candidate. You leveraged your domain knowledge to build products that really understand user needs. You're now at a ${userProfile.location}-based startup earning ${95 + Math.floor(Math.random() * 25)}K.`,
+                // Add more personalized outcomes...
+            };
+            
+            return personalizedOutcomes[pathChoice] || `Your unique background in ${userProfile.career} led to interesting opportunities in this path.`;
+        }
+
+        const monetizationOptions = {
+            premium: {
+                title: "Unlock Premium Membership",
+                price: "$4.99/month",
+                description: "• Unlimited life simulations\n• Detailed personality matching\n• Career & relationship deep-dives\n• Export detailed reports"
+            },
+            unlock: {
+                title: "Unlock This Decision",
+                price: "$1.99",
+                description: "Unlock this specific life path permanently and see detailed outcomes"
+            },
+            insights: {
+                title: "Premium Insights",
+                price: "$0.99",
+                description: "Get detailed analysis of why your parallel life turned out differently"
+            },
+            social: {
+                title: "Social Features",
+                price: "$2.99/month",
+                description: "• Compare paths with friends\n• Community insights\n• Anonymous life comparisons"
+            },
+            report: {
+                title: "Detailed Life Report",
+                price: "$4.99",
+                description: "Get a comprehensive PDF report of your parallel life analysis"
+            }
+        };
+
+        function handleLockedPath(pathElement, pathType, monetizationType) {
+            if (isPremium || (monetizationType === 'unlock' && pathElement.classList.contains('unlocked'))) {
+                selectPath(pathElement, pathType);
+            } else {
+                showMonetizationPopup(monetizationType);
+            }
+        }
+
+        function selectPath(pathElement, pathType) {
+            // Remove previous selection
+            document.querySelectorAll('.path').forEach(p => p.classList.remove('selected'));
+            
+            // Select current path if not locked
+            if (!pathElement.classList.contains('locked') || isPremium || pathElement.classList.contains('unlocked')) {
+                pathElement.classList.add('selected');
+                selectedPath = pathType;
+                
+                // Enable simulate button
+                const simulateBtn = document.getElementById('simulateBtn');
+                simulateBtn.disabled = false;
+                simulateBtn.textContent = 'Simulate This Life Path';
+            }
+        }
+
+        async function simulateLife() {
+            if (!selectedPath) return;
+            
+            if (freeUsesLeft <= 0 && !isPremium) {
+                showMonetizationPopup('premium');
+                return;
+            }
+
+            // Show loading for AI-generated content
+            if (selectedPath.startsWith('ai-')) {
+                const results = document.getElementById('resultsPanel');
+                const simulationResults = document.getElementById('simulationResults');
+                simulationResults.innerHTML = '<div style="text-align: center; padding: 20px;">🤖 AI is generating your personalized life simulation...</div>';
+                results.classList.add('show');
+                
+                // Generate personalized outcome
+                const pathIndex = parseInt(selectedPath.split('-')[1]);
+                const chosenPath = window.currentAIDecision.paths[pathIndex];
+                const personalizedOutcome = await generatePersonalizedOutcome(chosenPath.title, userProfile);
+                
+                const aiResults = {
+                    title: `AI-Generated: ${chosenPath.title} Path`,
+                    details: personalizedOutcome
+                };
+                
+                showResults(aiResults);
+            } else {
+                // Regular simulation
+                const results = generateSimulation(selectedPath);
+                showResults(results);
+            }
+            
+            // Update usage
+            if (!isPremium) {
+                freeUsesLeft--;
+                document.getElementById('freeUses').textContent = `${freeUsesLeft} free simulations left`;
+                
+                if (freeUsesLeft === 0) {
+                    document.getElementById('freeUses').textContent = 'Free simulations used up';
+                    document.getElementById('freeUses').style.background = '#ffebee';
+                    document.getElementById('freeUses').style.color = '#c62828';
+                }
+            }
+            
+            // Update stats
+            pathsExplored++;
+            decisionsMade++;
+            document.getElementById('pathsExplored').textContent = pathsExplored;
+            document.getElementById('decisionsMade').textContent = decisionsMade;
+        }
+
+        function generateSimulation(pathType) {
+            const simulations = {
+                engineering: {
+                    title: "The Engineering Path",
+                    details: "You graduated with a Computer Science degree in 2018. Started at a tech company earning $75K, now making $95K as a Senior Developer. You live in Austin, own a condo, and have strong job security. Your days involve coding, meetings, and problem-solving. You're financially stable but sometimes wonder about creative fulfillment."
+                },
+                arts: {
+                    title: "The Creative Path", 
+                    details: "You studied Fine Arts and became a freelance graphic designer. Your income varies ($30K-$60K yearly) but you love the creative freedom. You've worked on album covers, book designs, and brand identities. You live in a shared apartment in Portland, travel for inspiration, and feel deeply fulfilled by your creative work despite financial uncertainty."
+                },
+                entrepreneur: {
+                    title: "The Entrepreneurial Path",
+                    details: "You left your corporate job at 30 to start a digital marketing agency. After 2 years of struggle, you now run a team of 12 people and earn $120K annually. You work 60+ hours per week but love the autonomy. You've learned sales, leadership, and risk management. The stress is high but so is the satisfaction of building something from scratch."
+                },
+                corporate: {
+                    title: "The Corporate Ladder Path",
+                    details: "You stayed in corporate and climbed steadily. Now a Director at a Fortune 500 company earning $110K with excellent benefits. You have a predictable schedule, great work-life balance, and strong retirement savings. Your days involve strategic planning and team management. You feel secure but sometimes wonder about 'what if' scenarios."
+                },
+                bigcity: {
+                    title: "The Big City Path",
+                    details: "You moved to New York City in your twenties. Living in a small but expensive apartment ($2,800/month), you earn $85K but feel the energy of the city daily. You have access to world-class culture, networking opportunities, and career advancement. The cost of living is high, but the experiences and connections are invaluable."
+                },
+                smalltown: {
+                    title: "The Small Town Path",
+                    details: "You chose a quiet life in a rural mountain town. You earn less ($45K) but own a beautiful house with land that would cost $800K+ in a big city. You know your neighbors, have a 10-minute commute, and spend weekends hiking and gardening. Life is peaceful and meaningful, though career opportunities are limited."
+                }
+            };
+            
+            return simulations[pathType] || {
+                title: "Alternative Life Path",
+                details: "This path led to a different but interesting life with unique challenges and rewards. Each choice shapes who we become in unexpected ways."
+            };
+        }
+
+        function showResults(results) {
+            const resultsPanel = document.getElementById('resultsPanel');
+            const simulationResults = document.getElementById('simulationResults');
+            
+            simulationResults.innerHTML = `
+                <div class="parallel-life">
+                    <div class="life-title">${results.title}</div>
+                    <div class="life-details">${results.details}</div>
+                </div>
+                <div class="premium-unlock" onclick="showMonetizationPopup('insights')">
+                    <strong>📊 Get Detailed Analysis</strong><br>
+                    Discover why this path led to different outcomes - $0.99
+                </div>
+                <div class="premium-unlock" onclick="showMonetizationPopup('report')">
+                    <strong>📄 Full Life Report</strong><br>
+                    Comprehensive analysis + future predictions - $4.99
+                </div>
+            `;
+            
+            resultsPanel.classList.add('show');
+        }
+
+        function showMonetizationPopup(type) {
+            const popup = document.getElementById('monetizationPopup');
+            const title = document.getElementById('popupTitle');
+            const price = document.getElementById('priceTag');
+            const description = document.getElementById('popupDescription');
+            
+            const option = monetizationOptions[type];
+            title.textContent = option.title;
+            price.textContent = option.price;
+            description.innerHTML = option.description.replace(/\n/g, '<br>');
+            
+            popup.style.display = 'flex';
+            popup.currentType = type;
+        }
+
+        function closePopup() {
+            document.getElementById('monetizationPopup').style.display = 'none';
+        }
+
+        function handlePurchase() {
+            const popup = document.getElementById('monetizationPopup');
+            const type = popup.currentType;
+            
+            // Simulate purchase success
+            alert(`Purchase successful! You've unlocked ${monetizationOptions[type].title}`);
+            
+            if (type === 'premium') {
+                isPremium = true;
+                document.getElementById('premiumBadge').style.display = 'block';
+                document.getElementById('freeUses').textContent = 'Premium Member';
+                document.getElementById('freeUses').style.background = '#e8f5e8';
+                document.getElementById('freeUses').style.color = '#2e7d32';
+                
+                // Unlock all premium features
+                document.querySelectorAll('.decision-card.premium .lock-icon').forEach(lock => {
+                    lock.style.display = 'none';
+                });
+                document.querySelectorAll('.decision-card.premium .path').forEach(path => {
+                    path.classList.remove('locked');
+                });
+            } else if (type === 'unlock') {
+                // Unlock specific paths
+                document.querySelectorAll('.decision-card:last-of-type .path').forEach(path => {
+                    path.classList.remove('locked');
+                    path.classList.add('unlocked');
+                });
+                document.querySelector('.decision-card:last-of-type .lock-icon').style.display = 'none';
+            }
+            
+            closePopup();
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set initial state
+            updateFreeUsesDisplay();
+        });
+
+        async function generateAIContent() {
+            if (!userProfile.completedOnboarding) {
+                alert("Please complete your profile setup first to enable AI-generated content!");
+                return;
+            }
+
+            if (!isPremium && freeUsesLeft <= 0) {
+                showMonetizationPopup('premium');
+                return;
+            }
+
+            const aiCard = document.getElementById('aiDecisionCard');
+            const generateBtn = document.getElementById('aiGenerateBtn');
+            
+            // Show loading state
+            aiCard.style.display = 'block';
+            generateBtn.style.display = 'none';
+            
+            try {
+                // Generate AI decision
+                const aiDecision = await generateAIDecision(userProfile);
+                
+                // Update UI with AI-generated content
+                document.getElementById('aiDecisionTitle').textContent = aiDecision.title;
+                document.getElementById('aiDecisionDesc').textContent = aiDecision.description;
+                
+                const pathsContainer = document.getElementById('aiDecisionPaths');
+                pathsContainer.innerHTML = '';
+                
+                aiDecision.paths.forEach((path, index) => {
+                    const pathElement = document.createElement('div');
+                    pathElement.className = 'path';
+                    pathElement.style.background = 'linear-gradient(135deg, #e8f5e8, #c8e6c9)';
+                    pathElement.innerHTML = `
+                        <div class="path-title">${path.title}</div>
+                        <div class="path-outcome">${path.outcome}</div>
+                    `;
+                    pathElement.onclick = () => selectPath(pathElement, `ai-${index}`);
+                    pathsContainer.appendChild(pathElement);
+                });
+
+                // Store AI decision data for simulation
+                window.currentAIDecision = aiDecision;
+
+            } catch (error) {
+                console.error('AI generation failed:', error);
+                document.getElementById('aiDecisionTitle').textContent = 'AI Generation Failed';
+                document.getElementById('aiDecisionDesc').textContent = 'Please try again or check your connection.';
+            }
+        }
+
+        function saveUserProfile() {
+            const age = document.getElementById('userAge').value;
+            const career = document.getElementById('userCareer').value;
+            const location = document.getElementById('userLocation').value;
+
+            if (!age || !career || !location) {
+                alert('Please fill in all fields to enable AI features!');
+                return;
+            }
+
+            userProfile = {
+                age: parseInt(age),
+                career: career,
+                location: location,
+                completedOnboarding: true
+            };
+
+            // Hide profile setup, show AI features
+            event.target.parentElement.style.display = 'none';
+            
+            // Show AI generate button
+            document.getElementById('aiGenerateBtn').style.display = 'block';
+            
+            alert(`Profile saved! AI can now generate personalized scenarios for a ${age} year old ${career} in ${location}.`);
+        }
+    </script>
+</body>
+</html>
